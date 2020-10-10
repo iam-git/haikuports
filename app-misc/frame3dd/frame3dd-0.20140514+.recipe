@@ -1,0 +1,106 @@
+SUMMARY="A program for structural analysis of 2D and 3D frames and trusses"
+DESCRIPTION="Frame3DD is free open-source software for static and dynamic \
+structural analysis of 2D and 3D frames and trusses with elastic and geometric \
+stiffness. It computes the static deflections, reactions, internal element \
+forces, natural frequencies, mode shapes and modal participation factors \
+of two- and three- dimensional elastic structures using direct stiffness \
+and mass assembly. Frame3DD has its own text-file input format (.3dd), \
+but additionally supports matlab (.m) and spreadsheet (.csv) file formats, \
+and offers graphical output including mode shape animation via Gnuplot."
+HOMEPAGE="http://frame3dd.sourceforge.net/"
+COPYRIGHT="1992-2014 Henri P. Gavin."
+LICENSE="GNU GPL v3"
+REVISION="1"
+SOURCE_URI="https://sourceforge.net/projects/frame3dd/files/Frame3DD_20140514%2B.zip/download"
+CHECKSUM_SHA256="473b37eabba43662c1eb37ada54dcd1db433c83a29d4ce798ac4980a046b8a6e"
+
+ARCHITECTURES="x86_64 ?x86_gcc2"
+SECONDARY_ARCHITECTURES="x86"
+
+commandSuffix=$secondaryArchSuffix
+commandBinDir=$binDir
+if [ "$targetArchitecture" = x86_gcc2 ]; then
+	commandSuffix=
+	commandBinDir=$prefix/bin
+fi
+
+libVersion="2.0.0"
+libVersionCompat="$libVersion compat >= ${libVersion%%.*}"
+
+PROVIDES="
+	frame3dd$secondaryArchSuffix = $portVersion
+	"
+REQUIRES="
+	haiku$secondaryArchSuffix
+	"
+
+PROVIDES_devel="
+	frame3dd${secondaryArchSuffix}_devel = $portVersion
+	devel:libjte$secondaryArchSuffix = $libVersionCompat
+	"
+REQUIRES_devel="
+	frame3dd$secondaryArchSuffix == $portVersion base
+	"
+
+PROVIDES_tools="
+	jigit${secondaryArchSuffix}_tools = $portVersion
+	cmd:extract_data$commandSuffix = $portVersion
+	cmd:jigdump$commandSuffix = $portVersion
+	cmd:jigit$commandSuffix = $portVersion
+	cmd:jigsum$commandSuffix = $portVersion
+	cmd:jigsum_sha256$commandSuffix = $portVersion
+	cmd:jigit_mkimage$commandSuffix = $portVersion
+	cmd:mkjigsnap$commandSuffix = $portVersion
+	cmd:parallel_sums$commandSuffix = $portVersion
+	cmd:rsyncsum$commandSuffix = $portVersion
+	"
+REQUIRES_tools="
+	jigit$secondaryArchSuffix == $portVersion base
+	haiku$secondaryArchSuffix
+	cmd:awk
+	cmd:bash
+	cmd:wc
+	cmd:wget
+	cmd:xargs
+	lib:libbz2$secondaryArchSuffix
+	lib:libz$secondaryArchSuffix
+	"
+
+BUILD_REQUIRES="
+	haiku${secondaryArchSuffix}_devel
+	"
+BUILD_PREREQUIRES="
+	cmd:aclocal
+	cmd:autoconf
+	cmd:awk
+	cmd:gcc$secondaryArchSuffix
+	cmd:libtoolize$secondaryArchSuffix
+	cmd:make
+	cmd:pkg_config$secondaryArchSuffix
+	cmd:touch
+	"
+
+BUILD()
+{
+	gcc -O -Wall -o frame3dd main.c frame3dd.c frame3dd_io.c coordtrans.c eig.c HPGmatrix.c HPGutil.c NRutil.c  -lm
+}
+
+INSTALL()
+{
+	install -m 755 -d "$commandBinDir" "$manDir"/man1 "$manDir"/man8
+	install -m 755 -t "$commandBinDir" \
+		extract-data jigdump jigit jigit-mkimage jigsum jigsum-sha256\
+		mkjigsnap parallel-sums rsyncsum
+	install -m 644 -t "$manDir"/man1 *.1
+	install -m 644 -t "$manDir"/man8 *.8
+
+	cd libjte && make install
+	rm -f $libDir/*.la
+	prepareInstalledDevelLib libjte
+	fixPkgconfig
+
+	packageEntries devel \
+		$developDir
+	packageEntries tools \
+		$commandBinDir
+}
