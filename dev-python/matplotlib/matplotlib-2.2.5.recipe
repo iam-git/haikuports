@@ -1,0 +1,90 @@
+SUMMARY="Pure python plotting library with matlab like syntax"
+DESCRIPTION="Matplotlib is a plotting library for the Python programming \
+language and its numerical mathematics extension NumPy. It provides an \
+object-oriented API for embedding plots into applications using \
+general-purpose  GUI toolkits like Tkinter, wxPython, Qt, or GTK+. There is \
+also a procedural \"pylab\" interface, designed to closely resemble that of \
+MATLAB, though its use is discouraged."
+HOMEPAGE="https://matplotlib.org/"
+COPYRIGHT="2002 - 2012 John Hunter, Darren Dale, Eric Firing, Michael \
+Droettboom and the Matplotlib development team \
+2012 - 2020 The Matplotlib development team"
+LICENSE="Python" # "PSF-based" actually
+REVISION="1"
+SOURCE_URI="https://github.com/matplotlib/matplotlib/archive/v$portVersion.tar.gz"
+CHECKSUM_SHA256="75e9de4e4e47ae4cb23393e9df9431424d5034da77771d598ff14363d6a51dd1"
+#SOURCE_DIR="matplotlib-$portVersion"
+
+ARCHITECTURES="!x86_gcc2 x86 x86_64"
+SECONDARY_ARCHITECTURES="x86"
+
+PROVIDES="
+	$portName = $portVersion
+	"
+REQUIRES="
+	haiku$secondaryArchSuffix
+	lib:libpng16$secondaryArchSuffix
+	lib:libfreetype$secondaryArchSuffix
+	"
+BUILD_REQUIRES="
+	haiku${secondaryArchSuffix}_devel
+	devel:libpng16$secondaryArchSuffix
+	devel:libfreetype${secondaryArchSuffix}
+	"
+	
+PYTHON_PACKAGES=(python python3)
+PYTHON_VERSIONS=(2.7 3.7)
+if [ "$targetArchitecture" = "x86_gcc2" ]; then
+	PYTHON_PACKAGES=(python3)
+	PYTHON_VERSIONS=(3.7)
+fi
+for i in "${!PYTHON_PACKAGES[@]}"; do
+pythonPackage=${PYTHON_PACKAGES[i]}
+pythonVersion=${PYTHON_VERSIONS[$i]}
+eval "PROVIDES_${pythonPackage}=\"\
+	${portName}_$pythonPackage = $portVersion\
+	\"; \
+REQUIRES_${pythonPackage}=\"\
+	numpy${secondaryArchSuffix}_$pythonPackage\n\
+	dateutil_$pythonPackage\n\
+	pytz_$pythonPackage\n\
+	six_$pythonPackage\n\
+	pyqt${secondaryArchSuffix}_$pythonPackage\n\
+	cmd:python$pythonVersion\
+	\""
+BUILD_REQUIRES="$BUILD_REQUIRES
+	numpy${secondaryArchSuffix}_$pythonPackage
+	dateutil_$pythonPackage
+	pytz_$pythonPackage
+	six_$pythonPackage
+	pyqt${secondaryArchSuffix}_$pythonPackage
+	"
+BUILD_PREREQUIRES="
+	cmd:gcc$secondaryArchSuffix
+	cmd:pkg_config$secondaryArchSuffix
+	cmd:python$pythonVersion
+	setuptools_$pythonPackage
+	"
+done
+
+
+INSTALL()
+{
+
+	for i in "${!PYTHON_PACKAGES[@]}"; do
+		pythonPackage=${PYTHON_PACKAGES[i]}
+		pythonVersion=${PYTHON_VERSIONS[$i]}
+
+		python=python$pythonVersion
+		installLocation=$prefix/lib/$python/vendor-packages/
+		export PYTHONPATH=$installLocation:$PYTHONPATH
+		mkdir -p $installLocation
+		rm -rf build
+		$python setup.py build install \
+			--root=/ --prefix=$prefix
+
+		packageEntries  $pythonPackage \
+			$prefix/lib/python* \
+			$prefix/bin
+	done
+}
