@@ -6,16 +6,16 @@ modules for graphics and plotting, optimization, integration, special \
 functions, signal and image processing, genetic algorithms, ODE solvers, and \
 others."
 HOMEPAGE="https://www.scipy.org/"
-COPYRIGHT="2011-2018 The OpenBLAS Project"
-LICENSE="BSD (3-clause)
-	GNU LGPL v2"
+COPYRIGHT=" 2001-2002 Enthought, Inc.
+	2003-2019 SciPy Developers"
+LICENSE="BSD (3-clause)"
 REVISION="1"
 SOURCE_URI="https://github.com/scipy/scipy/releases/download/v$portVersion/scipy-$portVersion.tar.xz"
 CHECKSUM_SHA256="be0e1b322b4b9f2ab88a35db32c494f12639937cf671d4cc210238feb8d5a89d"
 SOURCE_DIR="scipy-$portVersion"
 
-ARCHITECTURES="!x86_gcc2 ?x86 x86_64"
-SECONDARY_ARCHITECTURES="?x86"
+ARCHITECTURES="!x86_gcc2 x86 x86_64"
+SECONDARY_ARCHITECTURES="x86"
 
 PROVIDES="
 	$portName = $portVersion
@@ -38,7 +38,7 @@ BUILD_REQUIRES="
 	devel:libumfpack$secondaryArchSuffix
 	"
 BUILD_PREREQUIRES="
-	pillow_python
+	pillow${secondaryArchSuffix}_python
 	cmd:f2py2
 	cmd:g++$secondaryArchSuffix
 	cmd:gfortran$secondaryArchSuffix
